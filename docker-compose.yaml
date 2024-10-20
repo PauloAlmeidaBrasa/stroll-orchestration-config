@@ -1,45 +1,35 @@
 version: '3'
 
 services:
-  api-internal:
-    build: ./api-internal
+  stroll-api-admin:
+    build:
+      context: ../stroll-api-admin
+      dockerfile: Dockerfile
+    container_name: stroll-api-admin
+    volumes:
+      - ../stroll-api-admin:/app
     ports:
       - "4000:4000"
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
     environment:
-      - JWT_SECRET=your_jwt_secret
-    networks:
-      - app-network
-
-  api-external:
-    build: ./api-external
+      MYSQL_ROOT_PASSWORD: rootpassword  # Root password
+      MYSQL_DATABASE: admin-stroll       # Database name
+      MYSQL_USER: admin                  # User for the database
+      MYSQL_PASSWORD: adminpassword      # Password for the user
     ports:
-      - "5000:5000"
-    environment:
-      - JWT_SECRET=your_jwt_secret
-    networks:
-      - app-network
-
-  admin-dashboard:
-    build: ./admin-dashboard
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api-internal
-    networks:
-      - app-network
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
+      - "3306:3306"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - api-internal
-      - api-external
-      - admin-dashboard
-    networks:
-      - app-network
+      - mysql-data:/var/lib/mysql
+
+
+volumes:
+  mysql-data:
 
 networks:
   app-network:
